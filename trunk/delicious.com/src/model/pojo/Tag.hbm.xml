@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated Oct 14, 2012 3:19:09 PM by Hibernate Tools 3.2.1.GA -->
+<hibernate-mapping>
+    <class name="model.pojo.Tag" table="tag" schema="public">
+        <id name="tagId" type="int">
+            <column name="tag_id" />
+            <generator class="assigned" />
+        </id>
+        <property name="tagName" type="string">
+            <column name="tag_name" length="50" />
+        </property>
+        <set name="tagsForPosts" inverse="true">
+            <key>
+                <column name="tag_id" not-null="true" />
+            </key>
+            <one-to-many class="model.pojo.TagsForPost" />
+        </set>
+    </class>
+</hibernate-mapping>

@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated Oct 14, 2012 3:19:09 PM by Hibernate Tools 3.2.1.GA -->
+<hibernate-mapping>
+    <class name="model.pojo.TagsForPost" table="tags_for_post" schema="public">
+        <composite-id name="id" class="model.pojo.TagsForPostId">
+            <key-property name="tagId" type="int">
+                <column name="tag_id" />
+            </key-property>
+            <key-property name="postId" type="int">
+                <column name="post_id" />
+            </key-property>
+        </composite-id>
+        <many-to-one name="tag" class="model.pojo.Tag" update="false" insert="false" fetch="select" cascade="save-update" lazy="false">
+            <column name="tag_id" not-null="true" />
+        </many-to-one>
+        <many-to-one name="posts" class="model.pojo.Posts" update="false" insert="false" fetch="select" cascade="save-update" lazy="false">
+            <column name="post_id" not-null="true" />
+        </many-to-one>
+        <property name="postTagId" type="java.lang.Integer">
+            <column name="post_tag_id" />
+        </property>
+    </class>
+</hibernate-mapping>

@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated Oct 14, 2012 3:19:09 PM by Hibernate Tools 3.2.1.GA -->
+<hibernate-mapping>
+    <class name="model.pojo.Document" table="document" schema="public">
+        <id name="documentId" type="int">
+            <column name="document_id" />
+            <generator class="assigned" />
+        </id>
+        <property name="url" type="string">
+            <column name="url" length="200" />
+        </property>
+        <property name="totalPosts" type="java.lang.Integer">
+            <column name="total_posts" />
+        </property>
+        <property name="hash" type="string">
+            <column name="hash" length="200" />
+        </property>
+        <property name="title" type="string">
+            <column name="title" length="300" />
+        </property>
+        <set name="postses" inverse="true">
+            <key>
+                <column name="doc_id" />
+            </key>
+            <one-to-many class="model.pojo.Posts" />
+        </set>
+    </class>
+</hibernate-mapping>
