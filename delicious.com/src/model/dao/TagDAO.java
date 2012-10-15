@@ -4,6 +4,7 @@
  */
 package model.dao;
 
+import java.io.Serializable;
 import model.pojo.Tag;
 import model.util.HibernateUtil;
 import org.hibernate.HibernateException;
@@ -14,9 +15,9 @@ import org.hibernate.classic.Session;
  *
  * @author THANHTUNG
  */
-public class TagDAO {
+public class TagDAO extends ObjectDAO<Tag, Integer> {
 
-    private static Tag getObject(String key) throws HibernateException {
+    private static Tag getObjectByValue(String key) throws HibernateException {
 
         Session session = HibernateUtil.getSessionFactory().openSession();
         String hql = "select t from Tag t where t.tagName = :name";
@@ -29,7 +30,7 @@ public class TagDAO {
 
     public static int nextIndex(String s) {
         Session session = HibernateUtil.getSessionFactory().openSession();
-        Tag t = getObject(s);
+        Tag t = getObjectByValue(s);
         if (t != null) {
             return t.getTagId();
         } else {
@@ -44,5 +45,10 @@ public class TagDAO {
                 return 1;
             }
         }
+    }
+
+    @Override
+    protected Class getPOJOClass() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

@@ -73,7 +73,7 @@ public class Posts  implements java.io.Serializable {
     public void setNote(String note) {
         this.note = note;
     }
-    public Date getDatePost() {
+    public Timestamp getDatePost() {
         return this.datePost;
     }
     
