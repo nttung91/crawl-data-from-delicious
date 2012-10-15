@@ -23,11 +23,11 @@
         <property name="datePost" type="timestamp">
             <column name="date_post" length="29" />
         </property>
-        <set name="tagsForPosts" inverse="true">
+        <set name="tagsForPosts" inverse="true" lazy="false" cascade="delete">
             <key>
                 <column name="post_id" not-null="true" />
             </key>
-            <one-to-many class="model.pojo.TagsForPost" />
+            <one-to-many class="model.pojo.TagsForPost"/>
         </set>
     </class>
 </hibernate-mapping>

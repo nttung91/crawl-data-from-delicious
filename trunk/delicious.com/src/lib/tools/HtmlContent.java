@@ -23,14 +23,17 @@ public class HtmlContent {
         try {
             String res = "";
             URL oracle = new URL(url);
+            
             in = new BufferedReader(
                     new InputStreamReader(oracle.openStream()));
             String inputLine;
             while ((inputLine = in.readLine()) != null) {
+                
                 res = inputLine;
             }
             in.close();
             return res;
+       
         } catch (IOException ex) {
             Logger.getLogger(HtmlContent.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
