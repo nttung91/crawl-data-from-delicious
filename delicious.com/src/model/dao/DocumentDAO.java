@@ -44,8 +44,8 @@ public class DocumentDAO extends ObjectDAO<Document, Integer> {
          session.close();
          
          if (doc != null){
-              DocumentDAO docdao =new DocumentDAO();
-              docdao.deleteObject(doc);
+//              DocumentDAO docdao =new DocumentDAO();
+//              docdao.deleteObject(doc);
               return doc.getDocumentId();//inform dup
          }
          else {

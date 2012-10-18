@@ -2,8 +2,9 @@
 <!DOCTYPE hibernate-reverse-engineering PUBLIC "-//Hibernate/Hibernate Reverse Engineering DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-reverse-engineering-3.0.dtd">
 <hibernate-reverse-engineering>
   <schema-selection match-catalog="delicious.com" match-schema="public"/>
-  <table-filter match-name="document"/>
-  <table-filter match-name="posts"/>
-  <table-filter match-name="tags_for_post"/>
   <table-filter match-name="tag"/>
+  <table-filter match-name="tag_collect"/>
+  <table-filter match-name="posts"/>
+  <table-filter match-name="document"/>
+  <table-filter match-name="tags_for_post"/>
 </hibernate-reverse-engineering>

@@ -23,24 +23,27 @@ import org.json.simple.parser.ParseException;
  *
  * @author THANHTUNG
  */
-public class DeliciousCom extends Thread {
+public class DeliciousCom1 extends Thread {
 
     String name;
     int delay;
     List<String> list=null;
-    public DeliciousCom(String name, int delay,ThreadGroup tg) {
+    public DeliciousCom1(String name, int delay,ThreadGroup tg) {
         super(tg,name);
         this.delay = delay;
         this.name = name;
-         list = DatabaseHelper.getMostPopularTag(250);
+         list = DatabaseHelper.getMostPopularTag(150);
         System.out.printf("%s started.\n", name);
         start();
     }
 
     @Override
     public void run() {
-
-        getRecentBookmarkByTag(list,name);
+        try {
+            getRecentTag();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(DeliciousCom1.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public void getRecentBookmarkByTag(List<String> list,String threadname) {
@@ -61,13 +64,14 @@ public class DeliciousCom extends Thread {
                             DeliciousHepler.getAndSaveBookmarkInfo(l.get(i));
                         } catch (Exception ex) {
                         }
+
                     }
 
                 }
             }
         } catch (ParseException ex) {
             System.out.println(threadname+" -------------------------------Thread end-------------------------");
-            Logger.getLogger(DeliciousCom.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DeliciousCom1.class.getName()).log(Level.SEVERE, null, ex);
         }
         System.out.println(threadname+" -------------------------------Thread end-------------------------");
     }
@@ -104,10 +108,10 @@ public class DeliciousCom extends Thread {
             rootGroup = parentGroup;
         }
          
-         DeliciousCom[] threads = new DeliciousCom[3];
+         DeliciousCom1[] threads = new DeliciousCom1[1];
           for (int i = 0;i<threads.length;i++){
                     if (threads[i]==null) {
-                        threads[i] = new DeliciousCom("Thread #"+(i+1),0, rootGroup);
+                        threads[i] = new DeliciousCom1("Thread #"+(i+1),0, rootGroup);
                     }
                 }
         
@@ -116,11 +120,15 @@ public class DeliciousCom extends Thread {
         int maxRetry = 100;
         while (true){
                 for (int i = 0;i<threads.length;i++){
-                    if (restartCount[i]>maxRetry) stopAll = true;
-                    if (stopAll) return;
+                    if (restartCount[i]>maxRetry) {
+                        stopAll = true;
+                    }
+                    if (stopAll) {
+                        return;
+                    }
                     if (!threads[i].isAlive()) {
-                        Thread.sleep(3000);
-                        threads[i] = new DeliciousCom("Thread #"+(i+1),0, rootGroup);
+                        Thread.sleep(1000);
+                        threads[i] = new DeliciousCom1("Thread #"+(i+1),0, rootGroup);
                         System.out.println("#"+threads[i].getName()+"Start again");
                         restartCount[i]++;
                     }
