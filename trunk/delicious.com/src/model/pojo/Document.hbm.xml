@@ -20,7 +20,7 @@
         <property name="title" type="string">
             <column name="title" length="300" />
         </property>
-        <set name="postses" inverse="true" lazy="false" cascade="delete">
+        <set name="postses" inverse="true" lazy="true" cascade="delete">
             <key>
                 <column name="doc_id" />
             </key>

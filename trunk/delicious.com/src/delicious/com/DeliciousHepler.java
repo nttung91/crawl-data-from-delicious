@@ -29,17 +29,18 @@ public class DeliciousHepler {
         String res = hc.getHtmlContent(url);
         return res;
     }
-
+    static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(DeliciousCom.class);
     public static int getRecentTag() {
         JSONParser jsonParser = new JSONParser();
 
-
+        
         String jsonDataString = getResponeData(String.format("http://feeds.delicious.com/v2/json/recent?count=1000"));
         if (jsonDataString != null) {
             try {
                 JSONArray jsonArray = (JSONArray) jsonParser.parse(jsonDataString);
                 int count = 0;
                 int count1 = 0;
+                logger.info(String.format("So post lay dc:" + jsonArray.size()));
                 System.out.println("So post lay dc:" + jsonArray.size());
                 for (int i = 0; i < jsonArray.size(); i++) {
 
@@ -178,7 +179,7 @@ public class DeliciousHepler {
             int index = docdao.processDuplicate(doc.getUrl());
             if (index != -1) {
                 //  DocID = index;
-                System.out.println("Document da ton tai" + index);
+              //  System.out.println("Document da ton tai" + index);
                 return;
             }
             doc.setDocumentId(DocID);
@@ -187,6 +188,7 @@ public class DeliciousHepler {
             try {
 
                 docdao.saveOrUpdateObject(doc);
+                System.out.println("Da luu Document "+ doc.getDocumentId());
             } catch (Exception ex) {
                 System.out.println("------------------Trung khoa chinh--------------");
             }
@@ -195,7 +197,97 @@ public class DeliciousHepler {
         }
         //end of doc
     }
+      public static void getAndSaveBookmarkHistoryByDocument(Document doc) throws ParseException {
+        JSONParser jsonParser = new JSONParser();
 
+        String jsonDataString = "";
+        String bookmark = MD5Convertor.Convert2MD5(doc.getUrl());
+        
+        try {
+            Thread.sleep(1000);
+            //System.out.println(totalPost);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(DeliciousHepler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        jsonDataString = getResponeData(String.format("http://feeds.delicious.com/v2/json/url/%s?count=%d", bookmark, 1000));
+        if (jsonDataString != null) {
+            try {
+                JSONArray jsonArray = (JSONArray) jsonParser.parse(jsonDataString);
+                //end of doc
+                PostDAO pdao = new PostDAO();
+                  logger.info(String.format("Doc #%d So post got:%d/%d\n",doc.getDocumentId(),jsonArray.size(),doc.getTotalPosts()));
+                   System.out.printf("Doc #%d So post got:%d/%d\n",doc.getDocumentId(),jsonArray.size(),doc.getTotalPosts());
+                for (int i = 0; i < jsonArray.size(); i++) {
+                    Posts post = new Posts();
+                    JSONObject obj = (JSONObject) jsonArray.get(i);
+
+                    if (obj.get("a") != null) {
+                        post.setAuthor(obj.get("a").toString());
+                        if (obj.get("a").toString().equals("")) {
+                            continue;
+                        }
+                    }
+
+                    if (obj.get("d") != null) {
+                        post.setDescription(obj.get("d").toString());
+                    }
+
+                    if (obj.get("n") != null) {
+                        post.setNote(obj.get("n").toString());
+                    }
+                    if (obj.get("dt") != null) {
+                        String date = obj.get("dt").toString();
+                        date = date.replace("T", " ").replace("Z", "");
+                        // System.out.println(date);
+                        post.setDatePost(Timestamp.valueOf(date));
+                    }
+                    int res = pdao.checkDuplicateItem(doc.getDocumentId(), post.getAuthor(), post.getDatePost());
+                    if (res == -1) {
+                        post.setPostId(PostDAO.nextIndex());
+                    } else {
+                        if (res == -2) {
+                            System.out.println("---------Trung vs older-----------");
+                            continue;
+                        } else {
+                            post.setPostId(res);
+                            System.out.println("---------Trung vs update -----------");
+                        }
+                    }
+                    post.setDocument(doc);
+                    try {
+
+                        pdao.saveOrUpdateObject(post);
+                    } catch (HibernateException ex) {
+                        ex.printStackTrace();
+                    }
+                    //Set<Tag> tags = new HashSet<>();
+                    if (obj.get("t") != null) {
+
+                        JSONArray arrTag = (JSONArray) obj.get("t");
+                        //   System.out.println("So tag:"+arrTag.size());
+                        for (int j = 0; j < arrTag.size(); j++) {
+                            String objtag = (String) arrTag.get(j);
+                            Tag tag = new Tag(TagDAO.nextIndex(objtag));
+                            //tag.setTagId(maxTag);
+                            //neu do dai lon hon 200 thi bo wa
+                            if (objtag.length() > 200) {
+                                continue;
+                            }
+                            tag.setTagName(objtag);
+                            TagsForPostId id = new TagsForPostId(tag.getTagId(), post.getPostId());
+                            TagsForPost tfp = new TagsForPost(id, tag, post);
+                            TagsForPostDAO tfpdao = new TagsForPostDAO();
+                            tfpdao.saveOrUpdateObject(tfp);
+                        }
+                    }
+                }
+            } catch (ParseException | NumberFormatException | HibernateException ex) {
+                System.out.println("--------------------Error ---------------");
+            }
+
+        }
+      }
     public static void getAndSaveBookmarkHistory(String bookmark) throws ParseException {
         JSONParser jsonParser = new JSONParser();
 

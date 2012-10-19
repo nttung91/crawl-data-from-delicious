@@ -23,7 +23,7 @@
         <property name="datePost" type="timestamp">
             <column name="date_post" length="29" />
         </property>
-        <set name="tagsForPosts" inverse="true" lazy="false" cascade="delete">
+        <set name="tagsForPosts" inverse="true" cascade="delete">
             <key>
                 <column name="post_id" not-null="true" />
             </key>

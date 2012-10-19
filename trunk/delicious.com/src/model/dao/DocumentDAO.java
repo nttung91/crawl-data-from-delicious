@@ -7,6 +7,7 @@ package model.dao;
 import java.util.List;
 import model.pojo.Document;
 import model.util.HibernateUtil;
+import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.classic.Session;
 
@@ -53,6 +54,16 @@ public class DocumentDAO extends ObjectDAO<Document, Integer> {
          }
          
      }
+       public List<Document> getList1() throws HibernateException{
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        List<Document> list= null;
+        String hql = String.format("select obj from Document obj order by obj.documentId");
+        Query query = session.createQuery(hql);
+      
+        list = query.list();
+        session.close();
+        return list;
+    }
 
     @Override
     protected Class getPOJOClass() {
