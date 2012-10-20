@@ -4,6 +4,8 @@
  */
 package delicious.com;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -24,13 +26,13 @@ import org.json.simple.parser.ParseException;
  */
 public class DeliciousHepler {
 
-    public static String getResponeData(String url) {
+    public static String getResponeData(String url) throws MalformedURLException, IOException {
         HtmlContent hc = new HtmlContent();
         String res = hc.getHtmlContent(url);
         return res;
     }
     static org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(DeliciousCom.class);
-    public static int getRecentTag() {
+    public static int getRecentTag() throws MalformedURLException, IOException {
         JSONParser jsonParser = new JSONParser();
 
         
@@ -95,7 +97,7 @@ public class DeliciousHepler {
         return -1;
     }
 
-    public static ArrayList<String> getRecentListBookmarkByTag(String tag, int count) throws ParseException {
+    public static ArrayList<String> getRecentListBookmarkByTag(String tag, int count) throws ParseException, MalformedURLException, IOException {
         JSONParser jsonParser = new JSONParser();
         String bookmarks = getResponeData(String.format("http://feeds.delicious.com/v2/json/tag/%s?count=%d", tag, count));
         if (bookmarks != null) {
@@ -113,7 +115,7 @@ public class DeliciousHepler {
         return null;
     }
 
-    public static ArrayList<String> getRecentBookmarks(int count) throws ParseException {
+    public static ArrayList<String> getRecentBookmarks(int count) throws ParseException, MalformedURLException, IOException {
         JSONParser jsonParser = new JSONParser();
         String bookmarks = getResponeData(String.format("http://feeds.delicious.com/v2/json/recent?count=%d", count));
         if (bookmarks != null) {
@@ -130,17 +132,13 @@ public class DeliciousHepler {
         }
         return null;
     }
-
-    public static synchronized void getAndSaveBookmarkInfo(String bookmark) throws ParseException {
+    
+    
+    public static synchronized boolean getAndSaveBookmarkInfo(String bookmark) throws ParseException, MalformedURLException, IOException {
         JSONParser jsonParser = new JSONParser();
-
-
         bookmark = MD5Convertor.Convert2MD5(bookmark);
         //get number of post in this link
         String linkInfo = getResponeData(String.format("http://feeds.delicious.com/v2/json/urlinfo/%s", bookmark));
-
-
-
         int totalPost = 0;
         int DocID = DocumentDAO.nextIndex();
 //        try {
@@ -158,7 +156,7 @@ public class DeliciousHepler {
 
             JSONArray infoArray = (JSONArray) jsonParser.parse(linkInfo);
             if (infoArray.size() == 0) {
-                return;
+                return false;
             }
             totalPost = Integer.parseInt(((JSONObject) infoArray.get(0)).get("total_posts").toString());
             //System.out.println("Total post count:" + totalPost);
@@ -180,24 +178,48 @@ public class DeliciousHepler {
             if (index != -1) {
                 //  DocID = index;
               //  System.out.println("Document da ton tai" + index);
-                return;
+                return false;
             }
             doc.setDocumentId(DocID);
-
-
             try {
-
                 docdao.saveOrUpdateObject(doc);
-                System.out.println("Da luu Document "+ doc.getDocumentId());
+            //    System.out.println("Da luu Document "+ doc.getDocumentId());
+                return true;
             } catch (Exception ex) {
                 System.out.println("------------------Trung khoa chinh--------------");
             }
 
             //System.out.println("Save 1 more book mark"); 
         }
-        //end of doc
+        return false;
     }
-      public static void getAndSaveBookmarkHistoryByDocument(Document doc) throws ParseException {
+   public static synchronized boolean getAndSaveBookmarkOnly(String bookmark) throws ParseException {
+      
+        int DocID = DocumentDAO.nextIndex();
+        
+
+        Document doc = new Document();
+        //get info document
+            DocumentDAO docdao = new DocumentDAO();        
+            int index = docdao.processDuplicate(bookmark);
+            if (index != -1) {
+                //  DocID = index;
+              //  System.out.println("Document da ton tai" + index);
+                return false;
+            }
+            doc.setDocumentId(DocID);
+            try {
+                docdao.saveOrUpdateObject(doc);
+            //    System.out.println("Da luu Document "+ doc.getDocumentId());
+                return true;
+            } catch (Exception ex) {
+                System.out.println("------------------Trung khoa chinh--------------");
+            }
+
+            //System.out.println("Save 1 more book mark"); 
+            return false;
+    }
+    public static void getAndSaveBookmarkHistoryByDocument(Document doc) throws ParseException, MalformedURLException, IOException {
         JSONParser jsonParser = new JSONParser();
 
         String jsonDataString = "";
@@ -288,7 +310,7 @@ public class DeliciousHepler {
 
         }
       }
-    public static void getAndSaveBookmarkHistory(String bookmark) throws ParseException {
+    public static void getAndSaveBookmarkHistory(String bookmark) throws ParseException, MalformedURLException, IOException {
         JSONParser jsonParser = new JSONParser();
 
         String jsonDataString = "";

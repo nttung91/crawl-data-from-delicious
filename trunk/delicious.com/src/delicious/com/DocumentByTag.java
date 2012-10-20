@@ -1,11 +1,9 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package delicious.com;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
@@ -19,16 +17,18 @@ import org.json.simple.parser.ParseException;
  *
  * @author THANHTUNG
  */
-public class DeliciousCom extends Thread {
+public class DocumentByTag extends Thread {
 
     String name;
-    int delay;
+    int position;
     List<String> list=null;
     org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(DeliciousCom.class);
-    public DeliciousCom(String name, int delay,ThreadGroup tg) {
+    int state;
+    public DocumentByTag(String name, int startPosition,ThreadGroup tg) {
         super(tg,name);
-        this.delay = delay;
+        this.state =0;
         this.name = name;
+        this.position = startPosition;
          list = DatabaseHelper.getMostPopularTag(1000);
          logger.info(String.format("%s started.\n", name));
         System.out.printf("%s started.\n", name);
@@ -38,35 +38,36 @@ public class DeliciousCom extends Thread {
     @Override
     public void run() {
 
-       getRecentBookmarkByTag(list,name);
+       getRecentBookmarkByTag(list,name,position,position+100);
        //getDocumentHistory();
     }
 
-    public void getRecentBookmarkByTag(List<String> list,String threadname) {
+    public void getRecentBookmarkByTag(List<String> list,String threadname,int start,int end) {
         ArrayList<String> l = null;
        
-        Random random = new Random();
-
+       // Random random = new Random();
+        int j=0;
         try {
-            while (true) {
-                int j = random.nextInt(list.size());
+            for (j=start;j<=end && j<list.size();j++) {
+         //       int j = random.nextInt(list.size());
                 l = DeliciousHepler.getRecentListBookmarkByTag(list.get(j), 1000);
                 if (l != null && l.size() > 0) {
                     int count =0;
                     for (int i = 0; i < l.size(); i++) {
                         //System.out.println(threadname+" -- #" + i);
                         try {
-                          if (DeliciousHepler.getAndSaveBookmarkInfo(l.get(i))) count++;
+                          if (DeliciousHepler.getAndSaveBookmarkOnly(l.get(i))) count++;
                         } catch (Exception ex) {
                             ex.printStackTrace();
                         }
                     }
-                     logger.info(String.format(threadname+" -- So Link lay dc tu tag #%s: %d/%d", list.get(j),count,l.size()));
-                     System.out.println(String.format(threadname+" -- So Link lay dc tu tag #%s: %d/%d", list.get(j),count,l.size()));
-                     System.out.println(Calendar.getInstance().getTime().toString());
+                     logger.info(String.format(threadname+" -- So Link lay dc tu tag #%d %s: %d/%d",j,list.get(j),count,l.size()));
+                     System.out.println(String.format(threadname+" -- So Link lay dc tu tag #%d %s: %d/%d",j, list.get(j),count,l.size()));
+                     
                 }
             }
-        } catch (ParseException ex) {
+        } catch ( ParseException ex) {
+            this.state = j;
             System.out.println(threadname+" -------------------------------Thread end-------------------------");
             Logger.getLogger(DeliciousCom.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -106,16 +107,18 @@ public class DeliciousCom extends Thread {
             rootGroup = parentGroup;
         }
          
-         DeliciousCom[] threads = new DeliciousCom[2];
+         DocumentByTag[] threads = new DocumentByTag[2];
           for (int i = 0;i<threads.length;i++){
                     if (threads[i]==null) {
-                        threads[i] = new DeliciousCom("Thread #"+(i+1),0, rootGroup);
+                        threads[i] = new DocumentByTag("Thread #"+(i+1),i*150, rootGroup);
+                        
                     }
                 }
         int[] restartCount = new int[threads.length];
         boolean stopAll = false;
-        int maxRetry = 100;
+        int maxRetry = 10000;
         while (true){
+               
                 for (int i = 0;i<threads.length;i++){
                     if (restartCount[i]>maxRetry) {
                         stopAll = true;
@@ -125,7 +128,9 @@ public class DeliciousCom extends Thread {
                     }
                     if (!threads[i].isAlive()) {
                         Thread.sleep(3000);
-                        threads[i] = new DeliciousCom("Thread #"+(i+1),0, rootGroup);
+                        int current = threads[i].state;
+                        System.out.println("cf" + current);
+                        threads[i] = new DocumentByTag("Thread #"+(i+1),i*150+current, rootGroup);
                         System.out.println("#"+threads[i].getName()+"Start again");
                         restartCount[i]++;
                     }
