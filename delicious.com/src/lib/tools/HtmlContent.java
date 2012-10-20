@@ -18,36 +18,25 @@ import java.util.logging.Logger;
  */
 public class HtmlContent {
 
-    public String getHtmlContent(String url) {
+    public String getHtmlContent(String url) throws MalformedURLException, IOException {
         BufferedReader in = null;
-        try {
-            String res = "";
-            URL oracle = new URL(url);
-            try {
-                in = new BufferedReader(
-                        new InputStreamReader(oracle.openStream()));
-            } catch (Exception ex)  {
-                if (in == null) {
-                    return null;
-                }
-            }
-            String inputLine;
-            while ((inputLine = in.readLine()) != null) {
 
-                res = inputLine;
-            }
-            in.close();
-            return res;
+        String res = "";
+        URL oracle = new URL(url);
 
-        } catch (IOException ex) {
-            Logger.getLogger(HtmlContent.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            try {
-                in.close();
-            } catch (IOException ex) {
-                Logger.getLogger(HtmlContent.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        in = new BufferedReader(
+                new InputStreamReader(oracle.openStream()));
+
+        String inputLine;
+        while ((inputLine = in.readLine()) != null) {
+
+            res = inputLine;
         }
-        return null;
+        in.close();
+        return res;
+
+
+
+
     }
 }
