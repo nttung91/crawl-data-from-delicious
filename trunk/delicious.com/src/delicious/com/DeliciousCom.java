@@ -4,6 +4,8 @@
  */
 package delicious.com;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -29,7 +31,7 @@ public class DeliciousCom extends Thread {
         super(tg,name);
         this.delay = delay;
         this.name = name;
-         list = DatabaseHelper.getMostPopularTag(1000);
+         list = DatabaseHelper.getMostPopularTag();
          logger.info(String.format("%s started.\n", name));
         System.out.printf("%s started.\n", name);
         start();
@@ -50,7 +52,13 @@ public class DeliciousCom extends Thread {
         try {
             while (true) {
                 int j = random.nextInt(list.size());
-                l = DeliciousHepler.getRecentListBookmarkByTag(list.get(j), 1000);
+                try {
+                    l = DeliciousHepler.getRecentListBookmarkByTag(list.get(j), 1000);
+                } catch (MalformedURLException ex) {
+                    Logger.getLogger(DeliciousCom.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (IOException ex) {
+                    Logger.getLogger(DeliciousCom.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 if (l != null && l.size() > 0) {
                     int count =0;
                     for (int i = 0; i < l.size(); i++) {
@@ -76,7 +84,13 @@ public class DeliciousCom extends Thread {
          int i = 10;
         int delaytime = 50;
         while (true){
-               delaytime +=DeliciousHepler.getRecentTag();
+            try {
+                delaytime +=DeliciousHepler.getRecentTag();
+            } catch (MalformedURLException ex) {
+                Logger.getLogger(DeliciousCom.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(DeliciousCom.class.getName()).log(Level.SEVERE, null, ex);
+            }
                
               System.out.println("Pause "+delaytime+" sec.........................");
               Thread.sleep(delaytime*1000);
@@ -90,7 +104,13 @@ public class DeliciousCom extends Thread {
         System.out.println("Lay xong ds document!");
         for (int i=3143;i<list.size();i++){
             try {
-                DeliciousHepler.getAndSaveBookmarkHistoryByDocument(list.get(i));
+                try {
+                    DeliciousHepler.getAndSaveBookmarkHistoryByDocument(list.get(i));
+                } catch (MalformedURLException ex) {
+                    Logger.getLogger(DeliciousCom.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (IOException ex) {
+                    Logger.getLogger(DeliciousCom.class.getName()).log(Level.SEVERE, null, ex);
+                }
             } catch (ParseException ex) {
                 Logger.getLogger(DeliciousCom.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -124,7 +144,7 @@ public class DeliciousCom extends Thread {
                         return;
                     }
                     if (!threads[i].isAlive()) {
-                        Thread.sleep(3000);
+                        Thread.sleep(450000);
                         threads[i] = new DeliciousCom("Thread #"+(i+1),0, rootGroup);
                         System.out.println("#"+threads[i].getName()+"Start again");
                         restartCount[i]++;

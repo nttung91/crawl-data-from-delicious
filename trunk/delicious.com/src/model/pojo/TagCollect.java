@@ -17,8 +17,7 @@ public class TagCollect  implements java.io.Serializable {
 
     public TagCollect() {
     }
-
-	
+    
     public TagCollect(int id, String tagName) {
         this.id = id;
         this.tagName = tagName;
