@@ -1,11 +1,10 @@
 
 package delicious.com;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import model.dao.DocumentDAO;
@@ -20,25 +19,28 @@ import org.json.simple.parser.ParseException;
 public class DocumentByTag extends Thread {
 
     String name;
-    int position;
+    int start;
     List<String> list=null;
     org.apache.log4j.Logger logger = org.apache.log4j.Logger.getLogger(DeliciousCom.class);
     int state;
-    public DocumentByTag(String name, int startPosition,ThreadGroup tg) {
+    int peroid;
+    public DocumentByTag(String name,int thread,int currentPosition,int numberOfThread,ThreadGroup tg) {
         super(tg,name);
         this.state =0;
         this.name = name;
-        this.position = startPosition;
-         list = DatabaseHelper.getMostPopularTag(1000);
+        
+        
+         list = DatabaseHelper.getMostPopularTag();
+         this.peroid = list.size()/numberOfThread+1;
+         this.start = thread * this.peroid+currentPosition;
          logger.info(String.format("%s started.\n", name));
         System.out.printf("%s started.\n", name);
         start();
-    }
-
+    } 
     @Override
     public void run() {
 
-       getRecentBookmarkByTag(list,name,position,position+100);
+       getRecentBookmarkByTag(list,name,start,start+peroid);
        //getDocumentHistory();
     }
 
@@ -50,7 +52,10 @@ public class DocumentByTag extends Thread {
         try {
             for (j=start;j<=end && j<list.size();j++) {
          //       int j = random.nextInt(list.size());
-                l = DeliciousHepler.getRecentListBookmarkByTag(list.get(j), 1000);
+                if (list.get(j).contains(" ")) continue;
+            //    Thread.currentThread().sleep(500);
+                l = DeliciousHepler.getPopularListBookmarkByTag(list.get(j), 1000);
+                System.out.println("after"+l.size());
                 if (l != null && l.size() > 0) {
                     int count =0;
                     for (int i = 0; i < l.size(); i++) {
@@ -63,12 +68,20 @@ public class DocumentByTag extends Thread {
                     }
                      logger.info(String.format(threadname+" -- So Link lay dc tu tag #%d %s: %d/%d",j,list.get(j),count,l.size()));
                      System.out.println(String.format(threadname+" -- So Link lay dc tu tag #%d %s: %d/%d",j, list.get(j),count,l.size()));
-                     
                 }
             }
+        } catch (MalformedURLException ex) {
+             this.state = j;
+               ex.printStackTrace();
+            Logger.getLogger(DocumentByTag.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+             this.state = j;
+               ex.printStackTrace();
+            Logger.getLogger(DocumentByTag.class.getName()).log(Level.SEVERE, null, ex);
         } catch ( ParseException ex) {
             this.state = j;
             System.out.println(threadname+" -------------------------------Thread end-------------------------");
+            ex.printStackTrace();
             Logger.getLogger(DeliciousCom.class.getName()).log(Level.SEVERE, null, ex);
         }
         System.out.println(threadname+" -------------------------------Thread end-------------------------");
@@ -77,10 +90,16 @@ public class DocumentByTag extends Thread {
          int i = 10;
         int delaytime = 50;
         while (true){
-               delaytime +=DeliciousHepler.getRecentTag();
-               
-              System.out.println("Pause "+delaytime+" sec.........................");
-              Thread.sleep(delaytime*1000);
+            try {
+                delaytime +=DeliciousHepler.getRecentTag();
+                
+               System.out.println("Pause "+delaytime+" sec.........................");
+               Thread.sleep(delaytime*1000);
+            } catch (MalformedURLException ex) {
+                Logger.getLogger(DocumentByTag.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(DocumentByTag.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
     public void getDocumentHistory(){
@@ -91,7 +110,13 @@ public class DocumentByTag extends Thread {
         System.out.println("Lay xong ds document!");
         for (int i=3143;i<list.size();i++){
             try {
-                DeliciousHepler.getAndSaveBookmarkHistoryByDocument(list.get(i));
+                try {
+                    DeliciousHepler.getAndSaveBookmarkHistoryByDocument(list.get(i));
+                } catch (MalformedURLException ex) {
+                    Logger.getLogger(DocumentByTag.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (IOException ex) {
+                    Logger.getLogger(DocumentByTag.class.getName()).log(Level.SEVERE, null, ex);
+                }
             } catch (ParseException ex) {
                 Logger.getLogger(DeliciousCom.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -106,11 +131,11 @@ public class DocumentByTag extends Thread {
         while ((parentGroup = rootGroup.getParent()) != null) {
             rootGroup = parentGroup;
         }
-         
-         DocumentByTag[] threads = new DocumentByTag[2];
+        
+         DocumentByTag[] threads = new DocumentByTag[3];
           for (int i = 0;i<threads.length;i++){
                     if (threads[i]==null) {
-                        threads[i] = new DocumentByTag("Thread #"+(i+1),i*150, rootGroup);
+                        threads[i] = new DocumentByTag("Thread #"+(i+1),i,0,threads.length, rootGroup);
                         
                     }
                 }
@@ -130,7 +155,7 @@ public class DocumentByTag extends Thread {
                         Thread.sleep(3000);
                         int current = threads[i].state;
                         System.out.println("cf" + current);
-                        threads[i] = new DocumentByTag("Thread #"+(i+1),i*150+current, rootGroup);
+                        threads[i] = new DocumentByTag("Thread #"+(i+1),i,current,threads.length, rootGroup);
                         System.out.println("#"+threads[i].getName()+"Start again");
                         restartCount[i]++;
                     }

@@ -64,6 +64,7 @@ public class DeliciousHepler {
                             TagCollect tag = new TagCollect();
                             tag.setId(TagCollectDAO.nextIndex());
                             tag.setTagName(objtag);
+                            if (tag.getTagName().equals(" ") || tag.getTagName().equals("") || tag.getTagName().equals("-")) continue;
                             tag.setDateTagged(ts);
                             //neu do dai lon hon 200 thi bo wa
                             if (objtag.length() > 200) {
@@ -74,7 +75,6 @@ public class DeliciousHepler {
                             if (dao.checkDuplicate(objtag, ts)) {
                                 count++;
                                 continue;
-
                             }
                             count1++;
                             dao.saveOrUpdateObject(tag);
@@ -114,6 +114,23 @@ public class DeliciousHepler {
         }
         return null;
     }
+    public static ArrayList<String> getPopularListBookmarkByTag(String tag, int count) throws ParseException, MalformedURLException, IOException {
+        JSONParser jsonParser = new JSONParser();
+        String bookmarks = getResponeData(String.format("http://feeds.delicious.com/v2/json/popular/%s?count=%d", tag, count));
+        if (bookmarks != null) {
+            JSONArray jsonArray = (JSONArray) jsonParser.parse(bookmarks);
+            ArrayList<String> l = new ArrayList<>();
+            for (int i = 0; i < jsonArray.size(); i++) {
+                JSONObject obj = (JSONObject) jsonArray.get(i);
+                if (obj.get("u") != null && !obj.get("u").toString().equals("")) {
+                    l.add(obj.get("u").toString().trim());
+                }
+
+            }
+            return l;
+        }
+        return null;
+    }
 
     public static ArrayList<String> getRecentBookmarks(int count) throws ParseException, MalformedURLException, IOException {
         JSONParser jsonParser = new JSONParser();
@@ -126,7 +143,6 @@ public class DeliciousHepler {
                 if (obj.get("u") != null && !obj.get("u").toString().equals("")) {
                     l.add(obj.get("u").toString().trim());
                 }
-
             }
             return l;
         }
@@ -208,6 +224,7 @@ public class DeliciousHepler {
                 return false;
             }
             doc.setDocumentId(DocID);
+            doc.setUrl(bookmark);
             try {
                 docdao.saveOrUpdateObject(doc);
             //    System.out.println("Da luu Document "+ doc.getDocumentId());
